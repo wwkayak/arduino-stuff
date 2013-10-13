@@ -14,35 +14,73 @@ package sensors.widgets;
  */
 public class Thermometer  {
 	
-	float tempC;
-	float tempF;
-	float maxHighTemp;
-	float maxLowTemp;
-	float sensorValue;
-	float upperRange;
-	float lowerRange;
+	double tempC = 78.1;
+	double tempF;
+	double maxHighTemp;
+	double maxLowTemp;
+	double sensorValue;
+	double upperRange;
+	double lowerRange;
 	String scale = "C";
 	
 	public Thermometer(){}
 	
 	public Thermometer(String scale){
 		this.scale = scale;
+		lowerRange = -30;
+		upperRange = 120;
+	}
+	
+	public String getScale() {
+		return scale;
 	}
 		
-	public void setCelsiusTemp(float newTemp){
+	public void setCelsiusTemp(double newTemp){
 		tempC = newTemp;
 		tempF = convertToFahrenheit(newTemp);
 		checkMaxMin(tempC);
-		
 	}
 	
-	public void setFahrenheitTemp(float newTemp){
+	public void setFahrenheitTemp(double newTemp){
 		tempF = newTemp;
 		tempC = convertToCelsius(newTemp);
 		checkMaxMin(tempC);
 	}
 	
-	void checkMaxMin(float tempC){
+	public double getCelsius(){
+		return tempC;
+	}
+	
+	public double getFahrenheit(){
+		return tempF;
+	}
+	
+	public void setRange(double lower, double upper) {
+		lowerRange = lower;
+		upperRange = upper;
+	}
+	
+	public double getLower() {
+		return lowerRange;
+	}
+	
+	public double getUpper() {
+		return upperRange;
+	}
+	
+	public double getRange() {
+		return upperRange - lowerRange;
+	}
+	
+	double convertToCelsius(double in){
+		return 5/9*(tempF - 32);
+	}
+	
+	double convertToFahrenheit(double in){
+		return 9/5*in + 32;
+	}
+	
+	void checkMaxMin(double tempC){
 		if(tempC > maxHighTemp){
 			maxHighTemp = tempC;
 		}
@@ -50,29 +88,8 @@ public class Thermometer  {
 			maxLowTemp = tempC;
 		}
 	}
-		
-	public void setRange(float lower, float upper) {
-		lowerRange = lower;
-		upperRange = upper;
-	}
 	
-	public float getCelsius(){
-		return tempC;
-	}
-	
-	public float getFahrenheit(){
-		return tempF;
-	}
-	
-	float convertToCelsius(float in){
-		return 5/9*(tempF - 32);
-	}
-	
-	float convertToFahrenheit(float in){
-		return 9/5*in + 32;
-	}
-	
-	public float getMax() {
+	public double getMax() {
 		if(scale=="F") {
 			return convertToFahrenheit(maxHighTemp);
 		}else {
@@ -80,7 +97,7 @@ public class Thermometer  {
 		}
 	}
 	
-	public float getMin() {
+	public double getMin() {
 		if(scale=="F") {
 			return convertToFahrenheit(maxLowTemp);
 		}else {
