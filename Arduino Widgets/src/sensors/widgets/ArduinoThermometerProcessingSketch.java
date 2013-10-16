@@ -1,8 +1,12 @@
 package sensors.widgets;
 
 import processing.core.PApplet;
+import processing.serial.*;
+
+
 import java.util.Random;
 
+@SuppressWarnings("serial")
 public class ArduinoThermometerProcessingSketch extends PApplet {
 
 	AlcoholThermometer[] thermometers = new AlcoholThermometer[4] ;
@@ -10,6 +14,8 @@ public class ArduinoThermometerProcessingSketch extends PApplet {
 	String message = "";
 	int xOffset = 0;
 	int yOffset = 0;
+	Serial comPort;
+	int B=3975; // temp conversion constant
 	
 	public void setup() {
 		size(800, 600);
@@ -19,6 +25,16 @@ public class ArduinoThermometerProcessingSketch extends PApplet {
 			thermometers[i].setLayer(i);
 			thermometers[i].setPos(r.nextInt(width-thermometers[i].width()), r.nextInt(height-thermometers[i].height()));
 		}
+		
+		try {
+			comPort = new Serial(this, Serial.list()[0], 9600);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			e.printStackTrace();
+			System.out.println("Make sure you are connected to the Arduino...");
+			System.exit(0);
+		}
+		
+		comPort.bufferUntil('\n');
 	}
 
 	public void draw() {
@@ -33,7 +49,6 @@ public class ArduinoThermometerProcessingSketch extends PApplet {
 	public void mousePressed() {
 		message="mouse pressed";
 		int layer = -1;
-		int count=0;
 		for(int i=0; i < thermometers.length; i++) {
 			if(thermometers[i].isMouseOver()) {
 				if( thermometers[i].layer() > layer){
@@ -82,12 +97,24 @@ public class ArduinoThermometerProcessingSketch extends PApplet {
 	}
 
 	
+	public void serialEvent(Serial cPort){
+		
+	  String str = cPort.readStringUntil('\n');
+	  if(str != null) {
+	    int sensorVal = Integer.parseInt(trim(str));
+	    double resistance=(1023-sensorVal)*10000/sensorVal; 
+	    double currTemp = 1/(log((float)resistance/10000)/B+1/298.15)-273.15;
+	    message = "TEMP: " + currTemp;
+	    thermometers[3].setCelsius(currTemp);
+	    
+	  } 
+	}
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
-		PApplet.main(new String[] { "--present",
+		PApplet.main(new String[] {
 				"sensors.widgets.ArduinoThermometerProcessingSketch" });
 
 	}
