@@ -1,5 +1,6 @@
 package sensors.widgets;
 
+import sensors.utilities.*;
 import processing.core.*;
 
 /**
@@ -13,14 +14,10 @@ import processing.core.*;
  * @see PGraphics
  * 
  */
-public class AlcoholThermometer implements SensorWidget {
+public class AlcoholThermometer extends SensorWidget {
 
-	int tw = 100;
-	int th = 480;
-	int x0 = 0;
-	int y0 = 0;
-	int midy = th/2;
-	int midx = tw/2;
+	int midy = height/2;
+	int midx = width/2;
 	int bulbx = midx - 5; // bulbx , y top of the bulb, bottom of glass tube
 	int bulby = 400;
 	int glassTop = 30;
@@ -32,21 +29,18 @@ public class AlcoholThermometer implements SensorWidget {
 	double temp;
 	double lowerLimit = 0;
 	double upperLimit = 50;
-	Double d = pixelRange/(upperLimit - lowerLimit);
-	int tickFactor = d.intValue();
+	double range = upperLimit - lowerLimit;
+	Double scale = pixelRange/(upperLimit - lowerLimit);
+	int pixPerDeg = scale.intValue();
 	
 	Thermometer thrmtr;
+	TemperatureUtility util = new TemperatureUtility();
 	PGraphics pg;
 	PGraphics pg2;
 	PImage bg;
 	PFont LCDFont;
 	PFont plainFont;
-	PApplet p;
 	
-
-	boolean over = false;
-	boolean dragging = false;
-
 	/**
 	 * Class Constructor
 	 * @param applet The parent class of all Processing "sketches"
@@ -64,34 +58,24 @@ public class AlcoholThermometer implements SensorWidget {
 	 */
 	public AlcoholThermometer(PApplet applet, String scale) {
 
+		super(applet);
+		
+		width=100;
+		height= 480;
 		thrmtr = new Thermometer(scale, lowerLimit, upperLimit);
 		thrmtr.setCelsiusTemp(lowerLimit+1);
-		p = applet;
-		pg = p.createGraphics(tw, th);
-		pg2 = p.createGraphics(tw, th);
+		pg = parent.createGraphics(width, height);
+		pg2 = parent.createGraphics(width, height);
 		initialize();
 	}
 
-	/**
-	 * Maps the temperature to a pixel location within the widget
-	 * @return A value based on pixels instead of temperature scale
-	 */
-	private int mapTemp2Pixles() {
-		if(thrmtr.getScale().equals("C")) {
-			temp = thrmtr.getCelsius();
-		}else {
-			temp = thrmtr.getFahrenheit();
-		}
-		double prcnt = (temp-lowerLimit) / (upperLimit-lowerLimit);
-		Double d = prcnt*pixelRange;
-		
-		return bulby-d.intValue();
-	}
+	
 	
 	public void initialize() {
-		bg = p.loadImage("thermometer-bg.png");
-		LCDFont = p.createFont("DS-DIGIB.TTF",20);
-		plainFont = p.createFont("Arial",11);
+		
+		bg = parent.loadImage("thermometer-bg.png");
+		LCDFont = parent.createFont("DS-DIGIB.TTF",20);
+		plainFont = parent.createFont("Arial",11);
 	}
 
 	/**
@@ -105,38 +89,42 @@ public class AlcoholThermometer implements SensorWidget {
 	public void draw(int px0, int py0) {
 		x0 = px0;
 		y0 = py0;
-		over = false;
 		
 		pg.beginDraw();
+		parent.tint(255, 255);
+		if(isMouseOver()) {
+			if(isDragging()) {
+				parent.tint(255, 125);
+			}
+		}
 		pg.background(bg);
 		drawShadow();	// A separate shadow to mach the amount of alcohol being displayed
 		pg.image(pg2,0,0);
 		drawGlass(); 	//draws an outline an highlight og a glass bulb
 		drawAlcohol();	// draws the actual  red "level"
 		drawScale();	// draws the gradient ticks and LCD
+		drawLCD();
 		pg.endDraw();
 				
-		p.tint(255, 255);
-		// Check if mouse is over our widget
-		if (p.mouseX > px0 && p.mouseX < px0 + tw && p.mouseY > py0
-				&& p.mouseY < py0 + th) {
-			over = true;
-			p.tint(255, 200);
-		} 
-		p.image(pg, x0, y0);
+		parent.image(pg, x0, y0);
 	}
 	
 	public void draw() {
 		this.draw(x0, y0);
 	}
 	
+	/**
+	 * I originally had a separate shadow method because I was using a BLUR filter
+	 * for a drop shadow, but it's sloow, but it also makes more maintainable.
+	 */
 	private void drawShadow() {
+		int pixPos  = mapTemp2Pixels(thrmtr.getCelsius());
 		pg2.beginDraw();
 		pg2.noFill();
 		pg2.clear();
 		pg2.strokeWeight(6);
 		pg2.stroke(150);
-		pg2.line(midx+7, mapTemp2Pixles(), midx+7, 398);
+		pg2.line(midx+7, bulby-pixPos, midx+7, 398);
 		pg2.endDraw();
 	}
 	
@@ -150,28 +138,37 @@ public class AlcoholThermometer implements SensorWidget {
 	}
 	
 	private void drawAlcohol() {
+		int pixPos  = mapTemp2Pixels(thrmtr.getCelsius());
 		pg.rectMode(PConstants.CORNERS);
 		pg.noStroke();
 		pg.fill(180,0,0);
-		pg.rect(midx-5, bulby, midx+5, mapTemp2Pixles() );
+		pg.rect(midx-5, bulby, midx+5, bulby-pixPos);
 		pg.fill(255,0,0);
-		pg.rect(midx-3, bulby, midx+4, mapTemp2Pixles() );
+		pg.rect(midx-3, bulby, midx+4, bulby-pixPos);
 		pg.fill(220,220,220);
-		pg.rect(midx-2, bulby, midx-1, mapTemp2Pixles() );
+		pg.rect(midx-2, bulby, midx-1, bulby-pixPos);
 		pg.fill(255,150,150);
-		pg.rect(midx-1, bulby, midx, mapTemp2Pixles() );
+		pg.rect(midx-1, bulby, midx, bulby-pixPos);
 		pg.fill(255,99,99);
-		pg.rect(midx, bulby, midx+1, mapTemp2Pixles() );
+		pg.rect(midx, bulby, midx+1,  bulby-pixPos);
 		
 	}
+	
+	/**
+	 * 
+	 */
+	private int mapTemp2Pixels(double temp) {
+		
+		Double location = util.mapTemperature( temp, lowerLimit, range, 0, pixelRange);
+		return location.intValue();
+		 
+	}
+	
 	/**
 	 *  Draws the actual gradient marks and LCD
 	 */
 	public void drawScale() {
-		
-		//get the range(pixles and temp)
-		//factor of tickMinor(deg) to pixels
-		//draw minors, then majors
+				
 		Double d;
 		 
 		pg.beginDraw();
@@ -182,14 +179,14 @@ public class AlcoholThermometer implements SensorWidget {
 		pg.textAlign(PConstants.LEFT, PConstants.CENTER);
 		
 		// Draw the minor temperature grasient lines
-		for(int i=tickFactor; i < pixelRange; i+=tickMinor*tickFactor){
+		for(int i=pixPerDeg; i < pixelRange; i+=tickMinor*pixPerDeg){
 			pg.line(bulbx-10, (bulby - i), bulbx-15, (bulby - i));
 			pg.line(bulbx+20, (bulby - i), bulbx+25, (bulby - i));
 			
 		}
 		// Draw the Minor temperature gradient lines and Celsius and Fahrenheit  numbers
 		pg.strokeWeight(1.5f);
-		for(int i=tickFactor, j=(int)lowerLimit; i <= pixelRange; i+=tickMajor*tickFactor, j+=tickMajor){
+		for(int i=pixPerDeg, j=(int)lowerLimit; i <= pixelRange; i+=tickMajor*pixPerDeg, j+=tickMajor){
 			pg.stroke(255,0,0);
 			pg.line(bulbx-10, (bulby - i), bulbx-17, (bulby - i));
 			pg.line(bulbx+20, (bulby - i), bulbx+27, (bulby - i));
@@ -201,88 +198,27 @@ public class AlcoholThermometer implements SensorWidget {
 			pg.textAlign(PConstants.RIGHT, PConstants.CENTER);
 			pg.text(""+ d.intValue(), bulbx-18, (bulby - i));
 		}
+		pg.endDraw();
+	}
+	
+	private void drawLCD(){
+		Double d;
 		
+		pg.beginDraw();
 		pg.textFont(LCDFont);
 		pg.fill(128,255,128);
 		pg.stroke(0);
-		pg.rect(15,th-12,tw-15,th-32,5,5,5,5);
+		pg.rect(15,height-12,width-15,height-32,5,5,5,5);
 		pg.textAlign(PConstants.CENTER, PConstants.CENTER);
 		
 		d = thrmtr.getCelsius();
 		pg.fill(64);
-		pg.text(String.format("%.1f", d.floatValue()), midx , th-24);
+		pg.text(String.format("%.1f", d.floatValue()), midx , height-24);
 		pg.endDraw();
-		
 	}
 	
-	public void setPos(int px, int py) {
-		x0 = px;
-		y0 = py;
-	}
-
-	/**
-	 * mouse pressed
-	 */
-	public void setDragging(boolean isDragging) {
-		dragging = isDragging;
-	}
-	
-	/**
-	 * mouse still pressed
-	 */
-	public boolean isDragging() {
-		return dragging;
-	}	
-	
-	/**
-	 * mouse is over our widget
-	 */
-	public boolean isMouseOver() {
-		return over;
-	}
-	
-	public int width() {
-		return tw;
-	}
-	
-	/**
-	 * Implementation of the SensorWidget's method
-	 * @param newTemp
-	 */
 	public void setCelsius(double newTemp) {
 		thrmtr.setCelsiusTemp(newTemp);
 	}
-
-	public int height() {
-		return th;
-	}
-
-	public int x() {
-		return x0;
-	}
-
-	public int y() {
-		return y0;
-	}
-
-	/**
-	 * Implementation of the SensorWidget's method
-	 * @return true / false
-	 */
-	public boolean over() {
-		return over;
-	}
-
-	/**
-	 * Implementation of the SensorWidget's method
-	 * Allows us to move widgets stacked on top of each other
-	 */
-	public int layer() {
-		return layer;
-	}
-	
-	public void setLayer(int l) {
-		layer = l;
-	}
-		
+			
 }
