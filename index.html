@@ -39,13 +39,39 @@
           <h1>
 <a name="arduino-processing-sensor-widgets" class="anchor" href="#arduino-processing-sensor-widgets"><span class="octicon octicon-link"></span></a>Arduino Processing Sensor Widgets</h1>
 
-<p>Just a collection of <a href="http://processing.org">Processing </a>widgets to visualize some common Arduino sensors. Essentially just got sick of serial.println and the terminal monitor.</p>
-<p><a href="http://wwkayak.github.io/arduino-stuff/javadocs/index.html">javadocs</a></p>
+<p>Just a collection of <a href="http://processing.org">Processing </a>widgets to visualize some common Arduino sensors. Basically I just got sick of serial.println and the terminal monitor.</p>
+<p>
+These widgets make use of the processing.org library, and in particular the processing.serial library. Processing has an Arduino-like IDE, but these classes are made to run outside of the IDE. In general, the main class in a processing application is PApplet. PApplet is responsible for maintaining the main drawing screen, graphics classes, serial connections, etc, Since all drawing commands must go through a PApplet, all of these widgets take a PApplet "parent" reference. Even though the widgets handle most of their drawing on local PGraphics objects, the final render is via a call to the PApplet parent.</p>
+<p>
+The basic formula is to create a class that extends PApplet and creates all your sensor widgets. This class contains a draw() method, and a serialEvent() method, among others.</p>
+<p>
+The draw() method, as would be expected, is responsible for handling the drawing of your GUI. Essentially you handle the interactions of your widgets, while calling their local draw() method. PApplet's draw() method is called continually at a frameRate() specified.
+</p>
+<p>
+The serialEvent() method is responsible for handling the serial communication between the Arduino and PApplet. The details depend on the protocol being used. A simple way is to just wait for a an EOL from the Arduino, then process the byte buffer. At it's simplest, the Arduino reads the sensor and prints the result, while the PApplet.serialEvent waits for it:
+<pre>
+Arduino Sketch:
+
+void loop()
+{
+  a=analogRead(0);
+  Serial.println(a);
+}
+</pre>
+<pre>
+PApplet "server":
+
+String str = cPort.readStringUntil('\n');
+int sensorVal = Integer.parseInt(trim(str));
+//do stuff, like convert to temperature, and call widget.setCelsius(t);	
+</pre>		
+</p>
+<p><a href="http://wwkayak.github.io/arduino-stuff/javadocs/index.html"><h3>javadocs</h3></a></p>
 
 <a href="https://github.com/wwkayak/arduino-stuff/blob/master/Arduino%20Widgets/src/sensors/widgets/AlcoholThermometer.java">
-<img src="http://wwkayak.github.io/arduino-stuff/images/alcometer.jpg" alt="AlcoholThermometer"></a>
+<img src="http://wwkayak.github.io/arduino-stuff/images/alcometer.jpg" alt="AlcoholThermometer" align="top"></a>
 <a href="https://github.com/wwkayak/arduino-stuff/blob/master/Arduino%20Widgets/src/sensors/widgets/GuageThermometer.java">
-<img src="http://wwkayak.github.io/arduino-stuff/images/gauge-thermometer.jpg" alt="GaugeThermometer"></a>
+<img src="http://wwkayak.github.io/arduino-stuff/images/gauge-thermometer.jpg" alt="GaugeThermometer" style="vertical-align:top"></a>
         </article>
       </div>
     </div>
