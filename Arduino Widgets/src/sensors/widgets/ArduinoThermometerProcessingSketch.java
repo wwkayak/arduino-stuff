@@ -3,9 +3,6 @@ package sensors.widgets;
 import processing.core.PApplet;
 import processing.serial.*;
 
-
-import java.util.Random;
-
 @SuppressWarnings("serial")
 public class ArduinoThermometerProcessingSketch extends PApplet {
 

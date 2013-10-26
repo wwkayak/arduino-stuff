@@ -147,8 +147,7 @@ public class GuageThermometer extends SensorWidget {
 	}
 	
 	private void drawLCD(){
-		Double d;
-		
+				
 		pg.beginDraw();
 		pg.textFont(LCDFont);
 		pg.fill(128,255,128);
