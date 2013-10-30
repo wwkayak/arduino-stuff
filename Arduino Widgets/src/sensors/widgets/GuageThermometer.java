@@ -76,7 +76,6 @@ public class GuageThermometer extends SensorWidget {
 	}
 	
 	private void drawScale() {
-		
 		float r = 95;
 		float theta =(float)startAngle;
 		float x1, y1;
@@ -143,17 +142,14 @@ public class GuageThermometer extends SensorWidget {
 				
 		pgNeedle.popMatrix();
 		pgNeedle.endDraw();
-		
 	}
 	
 	private void drawLCD(){
-				
 		pg.beginDraw();
 		pg.textFont(LCDFont);
 		pg.fill(128,255,128);
 		pg.stroke(0);
 		pg.rect(center-35,center+30,70,20,5,5,5,5);
-				
 		pg.textAlign(PConstants.CENTER, PConstants.CENTER);
 		pg.fill(64);
 		pg.text(String.format("%.1f", temp.floatValue()), center , center+38);

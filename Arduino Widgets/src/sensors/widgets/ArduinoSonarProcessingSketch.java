@@ -4,6 +4,11 @@ import processing.core.*;
 import processing.serial.*;
 
 @SuppressWarnings("serial")
+/**
+ * 
+ * A simple test sketch for the Sonar widget.
+ *
+ */
 public class ArduinoSonarProcessingSketch extends PApplet {
 
 	SensorWidget sonar;
@@ -17,7 +22,7 @@ public class ArduinoSonarProcessingSketch extends PApplet {
 		size(800, 600);
 		background(33, 123, 100);// nice green!
 		
-		sonar = new Sonar(this) ;
+		sonar = new Sonar(this, 450) ;
 		sonar.setLayer(0);
 		sonar.setPos(width/2-sonar.width()/2, height/2-sonar.height()/2);
 		
